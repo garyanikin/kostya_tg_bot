@@ -86,7 +86,7 @@ function printDate(month, day, ctx) {
         if (day || night) {
           const worker = workers[key];
           // очень странная логика
-          if (Number(day) === 12 || Number(day) === 8) {
+          if (Number(day) === 12) {
             // дневная смена
             return [`${worker} - день`];
           } else if (Number(day) === 3) {
@@ -97,7 +97,7 @@ function printDate(month, day, ctx) {
             return [`${worker} - после ночной`];
           }
 
-          return [""];
+          return null;
         } else {
           return null;
         }
