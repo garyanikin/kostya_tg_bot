@@ -1,0 +1,11 @@
+{
+  "main": "bot.js",
+  "dependencies": {
+    "excel": "^1.0.1",
+    "micro-bot": "^2.5.3",
+    "telegraf": "^3.38.0"
+  },
+  "scripts": {
+    "start": "node bot.js"
+  }
+}
