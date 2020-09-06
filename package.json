@@ -8,6 +8,6 @@
     "telegraf": "^3.38.0"
   },
   "scripts": {
-    "start": "node bot.js"
+    "start": "node bot_2.js"
   }
 }
