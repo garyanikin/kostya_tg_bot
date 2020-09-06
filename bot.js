@@ -40,6 +40,13 @@ function _getCell(data, row, column) {
   return _getRow(data, row)[column];
 }
 
+function printWorker(workerName, ctx) {
+  // Parse excel
+  // Find line with worker
+  // Parse dates on this line (row)
+  // Print working days
+}
+
 function printDate(month, day, ctx) {
   return parseXlsx(month + ".xlsx").then((_data) => {
     const datesRowNum = 10;
