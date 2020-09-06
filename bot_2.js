@@ -1,9 +1,14 @@
 const Telegraf = require("telegraf");
-const bot = new Telegraf("1383210322:AAHVQ3xbfIX1tCulP833Ze1eA9QJAgLxLdQ");
+const bot = new Telegraf("1325458080:AAEmjeeoTXFeJfhsX_m7nBFvQlxE0uTxgMY");
 const parseXlsx = require("excel").default;
 const Fuse = require("fuse.js");
 const fs = require("fs");
 const _ = require("lodash");
+
+// 13 - получить распинаие на 13 число месяца
+// 13 УПФР-1 - получить расписание на 13 число месяца для УПФР-1
+// Третьяков - получить расписание для третьякова
+// УПФР-1 - получть расписание для УПФР-1
 
 async function getMonthData() {
   const month = _getMonth();
@@ -18,6 +23,11 @@ async function getMonthData() {
     }
   } catch (err) {
     console.error(err);
+    return {
+      DAYS: null,
+      WORKES: null,
+      GROUPS: [],
+    };
   }
 
   if (DATA.length > 1) {
@@ -34,6 +44,7 @@ async function getMonthData() {
     return {
       DAYS: DATA[0].DAYS.concat(DATA[1].DAYS),
       WORKERS: joinWorkers(DATA[0].WORKERS, DATA[1].WORKERS),
+      GROUPS: _.uniq(DATA[0].GROUPS.concat(DATA[1].GROUPS)),
     };
 
     function joinWorkers(workers, workers2) {
@@ -104,15 +115,67 @@ async function getMonthData() {
     return {
       DAYS,
       WORKERS,
+      GROUPS,
     };
   }
 }
 
 (async () => {
-  const { DAYS, WORKERS } = await getMonthData();
+  //   const { DAYS, WORKERS, GROUPS } = await getMonthData();
 
   // BOT LOGIC
+  bot.on("text", async (ctx) => {
+    const { DAYS, WORKERS, GROUPS } = await getMonthData();
+
+    const message = ctx.message.text;
+
+    if (WORKERS === null) ctx.reply("не удалось загрузить файл с расписанием");
+
+    console.log("received message: ", message);
+    if (!isNaN(message) && Number(message) > 0 && Number(message) < 32) {
+      // Если сообщение число от 1 до 31
+
+      const day = message;
+      // Текущий месяц
+      const reply = getDay(WORKERS, day);
+      console.log("getDay");
+      ctx.reply(reply);
+    } else if (isDayWithGroup(message)) {
+      const splitted = message.split(" ");
+      const day = Number(splitted.shift());
+      const group = splitted.join(" ");
+      console.log("getGroupDay", day, group);
+      const reply = getGroupDay(WORKERS, day, group);
+      ctx.reply(reply);
+    } else if (isGroup(GROUPS, message)) {
+      console.log("getGroup");
+      ctx.reply(getGroup(WORKERS, message));
+    } else {
+      console.log("getWorker");
+      ctx.reply(getWorkerDays(WORKERS, message));
+    }
+  });
+
+  bot.launch();
 })();
+
+// Проверяет является ли сообщение датой с группой
+// 13 Упфп-1
+function isDayWithGroup(message) {
+  if (message.includes(" ")) {
+    return !isNaN(message.split(" ")[0]);
+  } else {
+    return false;
+  }
+}
+
+function isGroup(groups, message) {
+  const fuse = new Fuse(groups, {
+    threshold: 0.3,
+  });
+
+  return !!fuse.search(message).length;
+}
 
 function getMonth() {
   return new Date().toLocaleString("ru", { month: "long" });
@@ -159,8 +222,7 @@ function getWorkerDays(workers, name) {
 
 function _getWorkersBy(workers, key, value) {
   const fuse = new Fuse(workers, {
-    minMatchCharLength: 3,
-    threshold: 0.2,
+    threshold: 0.3,
     keys: [key],
   });
 
